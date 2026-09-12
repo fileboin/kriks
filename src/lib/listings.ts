@@ -38,8 +38,10 @@ export interface Category {
 /** Categories are relay-indexable `t` tags, so `#t` filters work at the relay level. */
 export const CATEGORIES: Category[] = [
   { value: 'telefoni', label: 'Telefoni' },
+  { value: 'sim-esim', label: 'SIM i eSIM' },
   { value: 'racunari', label: 'Računari' },
   { value: 'elektronika', label: 'Elektronika' },
+  { value: 'kripto', label: 'Kripto' },
   { value: 'vozila', label: 'Vozila' },
   { value: 'nekretnine', label: 'Nekretnine' },
   { value: 'namestaj', label: 'Nameštaj' },

@@ -6,9 +6,15 @@ import { ListingCard, ListingCardSkeleton } from '@/components/ListingCard';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { useListings } from '@/hooks/useListings';
 import { CATEGORIES, listingMatchesSearch } from '@/lib/listings';
-import { cn } from '@/lib/utils';
 
 import { ArrowRight, PackageSearch, Plus, Search } from 'lucide-react';
 
@@ -120,48 +126,38 @@ const Index = () => {
 
       {/* Categories + results */}
       <section className="container py-8 md:py-10" aria-label="Oglasi">
-        <div className="flex flex-wrap items-center gap-2" role="group" aria-label="Kategorije">
-          <button
-            type="button"
-            onClick={() => setCategory(undefined)}
-            aria-pressed={!category}
-            className={cn(
-              'rounded-full border px-4 py-1.5 text-sm font-medium transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring',
-              !category
-                ? 'border-primary bg-primary text-primary-foreground'
-                : 'bg-background hover:bg-muted',
-            )}
-          >
-            Svi oglasi
-          </button>
-          {CATEGORIES.map((c) => (
-            <button
-              key={c.value}
-              type="button"
-              onClick={() => setCategory(category === c.value ? undefined : c.value)}
-              aria-pressed={category === c.value}
-              className={cn(
-                'rounded-full border px-4 py-1.5 text-sm font-medium transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring',
-                category === c.value
-                  ? 'border-primary bg-primary text-primary-foreground'
-                  : 'bg-background hover:bg-muted',
-              )}
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div className="w-full sm:w-64">
+            <label htmlFor="category-filter" className="sr-only">
+              Filtriraj po kategoriji
+            </label>
+            <Select
+              value={category ?? 'all'}
+              onValueChange={(value) => setCategory(value === 'all' ? undefined : value)}
             >
-              {c.label}
-            </button>
-          ))}
-        </div>
-
-        <div className="mt-6 flex items-center justify-between">
-          <h2 className="text-xl font-semibold tracking-tight">
-            {query ? `Rezultati za „${query}“` : 'Najnoviji oglasi'}
-          </h2>
+              <SelectTrigger id="category-filter" className="w-full rounded-full">
+                <SelectValue placeholder="Sve kategorije" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Sve kategorije</SelectItem>
+                {CATEGORIES.map((c) => (
+                  <SelectItem key={c.value} value={c.value}>
+                    {c.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
           {filtered.length > 0 && (
             <p className="text-sm text-muted-foreground">
               {filtered.length} {filtered.length === 1 ? 'oglas' : 'oglasa'}
             </p>
           )}
         </div>
+
+        <h2 className="mt-6 text-xl font-semibold tracking-tight">
+          {query ? `Rezultati za „${query}“` : 'Najnoviji oglasi'}
+        </h2>
 
         <div className="mt-4">
           {isPending ? (
