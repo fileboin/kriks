@@ -13,7 +13,9 @@
  * first campaign is ready to go live.
  */
 export const ADMIN_PUBKEYS: readonly string[] = [
-  // '0123456789abcdef… (64-char hex pubkey of the operator)',
+  // DEMO admin (Demo Prodavac identity) — replace with the real operator
+  // key before production (SP3 admin UI).
+  '8b5658124f5b703ccec1aa84c0253b5abe6c0000f24b4b1491742e572a2059fe',
 ];
 
 export function hasAdminPubkeys(): boolean {
