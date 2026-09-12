@@ -69,7 +69,6 @@ const CreateListing = () => {
 
   const formValid =
     title.trim().length >= 3 &&
-    description.trim().length >= 10 &&
     priceValid &&
     !isPublishing &&
     !isUploading;
@@ -329,7 +328,6 @@ const CreateListing = () => {
                 id="description"
                 placeholder="Opiši stanje, opremu, razlog prodaje, način preuzimanja…"
                 rows={7}
-                required
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
               />
