@@ -1,0 +1,17 @@
+{
+  "name": "Oglasnik — oglasna tabla na Nostr-u",
+  "short_name": "Oglasnik",
+  "description": "Decentralizovana oglasna tabla na Nostr protokolu. Bez servera, bez provizija, bez registracije.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#6366f1",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}
