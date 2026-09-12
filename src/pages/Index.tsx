@@ -3,6 +3,7 @@ import { Link, useSearchParams } from 'react-router-dom';
 import { useSeoMeta } from '@unhead/react';
 
 import { ListingCard, ListingCardSkeleton } from '@/components/ListingCard';
+import { SponsoredSection } from '@/components/sponsored/SponsoredSection';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -171,6 +172,9 @@ const Index = () => {
             </p>
           )}
         </div>
+
+        {/* Sponsored / featured slider (renders nothing without active campaigns) */}
+        <SponsoredSection />
 
         <h2 className="mt-6 text-xl font-semibold tracking-tight">
           {query ? `Rezultati za „${query}“` : 'Najnoviji oglasi'}
