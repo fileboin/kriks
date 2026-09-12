@@ -156,11 +156,16 @@ export function parsePubkeyInput(value: string): string | undefined {
   return undefined;
 }
 
-/** Is an action valid in the given status, for the given actor? */
+/**
+ * Is an action valid in the given status, for the given actor?
+ * `trail` holds the valid actions applied so far (needed to identify who
+ * initiated a cancellation while the escrow is in the `cancelling` state).
+ */
 function isValidTransition(
   contract: EscrowContract,
   status: EscrowStatus,
   action: EscrowAction,
+  trail: EscrowAction[],
 ): boolean {
   if (TERMINAL_STATUSES.includes(status)) return false;
   if (status === 'expired') return false;
@@ -187,7 +192,24 @@ function isValidTransition(
     case 'release':
       return status === 'delivered';
     case 'dispute':
-      return status === 'active' || status === 'funded' || status === 'delivered';
+      return (
+        status === 'active' ||
+        status === 'funded' ||
+        status === 'delivered' ||
+        status === 'cancelling'
+      );
+    case 'cancel':
+      // The initiator may withdraw their own (unaccepted) proposal.
+      if (status === 'proposed') return action.author === contract.initiator;
+      // Either trade party may request cancellation before delivery.
+      if (status === 'active' || status === 'funded') return true;
+      // In `cancelling`, only the *other* trade party can confirm — the
+      // cancel request is necessarily the last applied action in this state.
+      if (status === 'cancelling') {
+        const cancelInitiator = trail[trail.length - 1]?.author;
+        return action.author !== cancelInitiator;
+      }
+      return false;
     case 'resolve':
       return status === 'disputed';
     default:
@@ -209,6 +231,10 @@ function applyVerb(status: EscrowStatus, action: EscrowAction): EscrowStatus {
       return 'released';
     case 'dispute':
       return 'disputed';
+    case 'cancel':
+      // Mutual cancellation: request -> cancelling, confirmation -> cancelled.
+      // Withdrawal of an unaccepted proposal lands directly in cancelled.
+      return status === 'cancelling' || status === 'proposed' ? 'cancelled' : 'cancelling';
     case 'resolve':
       return action.outcome === 'refund' ? 'refunded' : 'released';
     default:
@@ -238,7 +264,7 @@ export function deriveEscrowState(
   const trail: EscrowAction[] = [];
 
   for (const action of parsed) {
-    if (isValidTransition(contract, status, action)) {
+    if (isValidTransition(contract, status, action, trail)) {
       status = applyVerb(status, action);
       trail.push(action);
     }
@@ -279,15 +305,17 @@ export function nextEscrowActions(state: EscrowState, viewerPubkey: string | und
             { verb: 'accept', label: 'Prihvati escrow' },
             { verb: 'decline', label: 'Odbij', destructive: true },
           ]
-        : [];
+        : [{ verb: 'cancel', label: 'Povuci predlog', destructive: true }];
     case 'active':
       return [
         ...(role === 'buyer' ? [{ verb: 'fund', label: 'Uplaćeno', requiresNote: true } as EscrowNextAction] : []),
+        { verb: 'cancel', label: 'Zatraži otkazivanje' },
         { verb: 'dispute', label: 'Otvori spor', destructive: true },
       ];
     case 'funded':
       return [
         ...(role === 'seller' ? [{ verb: 'deliver', label: 'Isporučeno', requiresNote: true } as EscrowNextAction] : []),
+        { verb: 'cancel', label: 'Zatraži otkazivanje' },
         { verb: 'dispute', label: 'Otvori spor', destructive: true },
       ];
     case 'delivered':
@@ -295,6 +323,16 @@ export function nextEscrowActions(state: EscrowState, viewerPubkey: string | und
         ...(role === 'buyer' ? [{ verb: 'release', label: 'Pusti sredstva' } as EscrowNextAction] : []),
         { verb: 'dispute', label: 'Otvori spor', destructive: true },
       ];
+    case 'cancelling': {
+      // The cancel request is the last applied action in this state.
+      const cancelInitiator = state.trail[state.trail.length - 1]?.author;
+      const actions: EscrowNextAction[] = [];
+      if (viewerPubkey !== cancelInitiator) {
+        actions.push({ verb: 'cancel', label: 'Potvrdi otkazivanje', destructive: true });
+      }
+      actions.push({ verb: 'dispute', label: 'Otvori spor', destructive: true });
+      return actions;
+    }
     case 'disputed':
       return role === 'arbiter'
         ? [
@@ -322,10 +360,13 @@ export function escrowProgress(state: EscrowState): number {
     case 'released':
       return 4;
     case 'disputed':
-    case 'refunded': {
+    case 'refunded':
+    case 'cancelling':
+    case 'cancelled': {
+      // Furthest happy-path step before the dispute/cancel request.
       let depth = 0;
       for (const action of state.trail) {
-        if (action.verb === 'dispute') break;
+        if (action.verb === 'dispute' || action.verb === 'cancel') break;
         if (action.verb === 'accept') depth = 1;
         if (action.verb === 'fund') depth = 2;
         if (action.verb === 'deliver') depth = 3;
@@ -346,6 +387,8 @@ export const STATUS_LABELS: Record<EscrowStatus, string> = {
   released: 'Završeno — pušteno prodavcu',
   refunded: 'Završeno — refundirano kupcu',
   disputed: 'Spor — čeka odluku arbitra',
+  cancelling: 'Otkazivanje — čeka potvrdu',
+  cancelled: 'Otkazano',
   declined: 'Odbijeno',
   expired: 'Isteklo',
 };
@@ -358,6 +401,7 @@ export const VERB_LABELS: Record<EscrowVerb, string> = {
   deliver: 'označio isporuku',
   release: 'pustio sredstva',
   dispute: 'otvorio spor',
+  cancel: 'tražio otkazivanje',
   resolve: 'presudio',
 };
 

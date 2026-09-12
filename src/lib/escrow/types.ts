@@ -23,6 +23,7 @@ export type EscrowVerb =
   | 'deliver'
   | 'release'
   | 'dispute'
+  | 'cancel'
   | 'resolve';
 
 export type EscrowStatus =
@@ -33,6 +34,8 @@ export type EscrowStatus =
   | 'released'
   | 'refunded'
   | 'disputed'
+  | 'cancelling'
+  | 'cancelled'
   | 'declined'
   | 'expired';
 
@@ -86,6 +89,7 @@ export const VERB_ROLES: Record<EscrowVerb, readonly EscrowRole[]> = {
   deliver: ['seller'],
   release: ['buyer'],
   dispute: ['buyer', 'seller'],
+  cancel: ['buyer', 'seller'],
   resolve: ['arbiter'],
 };
 
@@ -96,6 +100,7 @@ export const ESCROW_VERBS: readonly EscrowVerb[] = [
   'deliver',
   'release',
   'dispute',
+  'cancel',
   'resolve',
 ];
 
@@ -103,5 +108,6 @@ export const ESCROW_VERBS: readonly EscrowVerb[] = [
 export const TERMINAL_STATUSES: readonly EscrowStatus[] = [
   'released',
   'refunded',
+  'cancelled',
   'declined',
 ];

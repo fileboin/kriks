@@ -55,7 +55,7 @@ Tags:
 - `a` — the escrow coordinate (`36797:<initiator>:<d>`)
 - `e` — the contract event id
 - `p` × 3 — participants copied from the contract (for `#p` filtering)
-- `verb` — `accept` | `decline` | `fund` | `deliver` | `release` | `dispute` | `resolve`
+- `verb` — `accept` | `decline` | `fund` | `deliver` | `release` | `dispute` | `cancel` | `resolve`
 - `outcome` — for `resolve` only: `release` (pay seller) or `refund` (pay buyer)
 - `alt` — NIP-31 description
 
@@ -67,16 +67,26 @@ Tags:
 proposed ──accept(counterparty)──▶ active ──fund(buyer)──▶ funded ──deliver(seller)──▶ delivered ──release(buyer)──▶ released
     │                                │                       │                          │
     ├──decline(counterparty)──▶ declined │                       │                          │
-    └──(expires)──▶ expired           └──────────── dispute(buyer|seller) ────────────────┘
-                                              │
-                                              ▼
-                                     resolve(arbiter) ──▶ released | refunded
+    ├──cancel(initiator)──▶ cancelled   └──────────── dispute(buyer|seller) ──────────────┘
+    └──(expires)──▶ expired                       │
+                                                 ▼
+                                        resolve(arbiter) ──▶ released | refunded
+
+active|funded ──cancel(A)──▶ cancelling ──cancel(B≠A)──▶ cancelled
+                                │
+                                └──dispute──▶ disputed (breaks a cancellation stalemate)
 ```
 
 Valid transitions are enforced by `deriveEscrowState` (`src/lib/escrow/core.ts`):
 - only the counterparty (not the initiator) may `accept`/`decline` a proposal
-- verb ↔ role mapping: `fund`→buyer, `deliver`→seller, `release`→buyer, `resolve`→arbiter
-- invalid actions are ignored; terminal statuses accept no transitions
+- verb ↔ role mapping: `fund`→buyer, `deliver`→seller, `release`→buyer, `resolve`→arbiter, `cancel`→buyer/seller
+- `cancel` semantics:
+  - on an unaccepted proposal the **initiator** may withdraw it (`cancelled`)
+  - from `active`/`funded` either trade party may request cancellation (`cancelling`);
+    only the **other** trade party confirms it (`cancelled`)
+  - from `cancelling` either party may still open a dispute to break a stalemate
+- invalid actions are ignored; terminal statuses (`released`, `refunded`,
+  `cancelled`, `declined`) accept no transitions
 - actions signed before the current contract version are ignored
 
 ### Adapters (core + adapter architecture)

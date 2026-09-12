@@ -43,11 +43,20 @@ import { cn } from '@/lib/utils';
 
 import {
   ArrowLeft,
+  BadgeCheck,
+  Ban,
+  CalendarDays,
+  CheckCircle2,
   Coins,
+  Copy,
   FileClock,
   Gavel,
   Loader2,
+  MapPin,
+  MessageCircle,
+  PackageX,
   ShieldCheck,
+  Tag,
   UserRound,
 } from 'lucide-react';
 
@@ -101,10 +110,19 @@ const TRAIL_ICONS: Record<string, typeof ShieldCheck> = {
   deliver: FileClock,
   release: ShieldCheck,
   dispute: Gavel,
+  cancel: Ban,
   resolve: Gavel,
 };
 
-function TrailRow({ action, contract }: { action: EscrowAction; contract: EscrowState['contract'] }) {
+function TrailRow({
+  action,
+  contract,
+  verbLabel,
+}: {
+  action: EscrowAction;
+  contract: EscrowState['contract'];
+  verbLabel: string;
+}) {
   const author = useAuthor(action.author);
   const metadata = author.data?.metadata;
   const displayName = metadata?.display_name ?? metadata?.name ?? shortNpub(action.author);
@@ -122,7 +140,7 @@ function TrailRow({ action, contract }: { action: EscrowAction; contract: Escrow
           <span className="font-medium">{displayName}</span>
           <span className="text-muted-foreground">
             {' '}
-            ({roleLabel}) je {VERB_LABELS[action.verb]}
+            ({roleLabel}) je {verbLabel}
             {action.verb === 'resolve' && action.outcome === 'refund' && ' — refundacija kupcu'}
             {action.verb === 'resolve' && action.outcome === 'release' && ' — isplata prodavcu'}
           </span>
@@ -136,6 +154,20 @@ function TrailRow({ action, contract }: { action: EscrowAction; contract: Escrow
       </div>
     </li>
   );
+}
+
+/** Human label for a trail action — distinguishes the cancel request,
+ * its confirmation, and the withdrawal of an unaccepted proposal. */
+function trailVerbLabel(action: EscrowAction, index: number, state: EscrowState): string {
+  if (action.verb !== 'cancel') return VERB_LABELS[action.verb];
+
+  const hasLaterCancel = state.trail.slice(index + 1).some((a) => a.verb === 'cancel');
+  const hasEarlierCancel = state.trail.slice(0, index).some((a) => a.verb === 'cancel');
+
+  if (hasEarlierCancel && !hasLaterCancel) return 'potvrdio otkazivanje';
+  if (hasLaterCancel) return 'tražio otkazivanje';
+  // Single cancel: withdrawal of an unaccepted proposal vs. cancel request.
+  return state.status === 'cancelled' ? 'povukao predlog' : 'tražio otkazivanje';
 }
 
 export interface EscrowDetailProps {
@@ -390,8 +422,13 @@ export function EscrowDetail({ initiator, identifier }: EscrowDetailProps) {
             </p>
           ) : (
             <ul className="-mb-4">
-              {state.trail.map((action) => (
-                <TrailRow key={action.event.id} action={action} contract={contract} />
+              {state.trail.map((action, i) => (
+                <TrailRow
+                  key={action.event.id}
+                  action={action}
+                  contract={contract}
+                  verbLabel={trailVerbLabel(action, i, state)}
+                />
               ))}
             </ul>
           )}

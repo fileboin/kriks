@@ -13,6 +13,8 @@ export interface EscrowTimelineProps {
 const OVERRIDES: Partial<Record<EscrowStatus, string>> = {
   disputed: 'Spor u toku — arbitar presudjuje',
   refunded: 'Završeno refundacijom kupcu',
+  cancelled: 'Otkazano uzajamno — sredstva se vraćaju po dogovoru strana',
+  cancelling: 'Jedna strana traži otkazivanje — čeka se potvrda druge',
   declined: 'Odbijeno od strane druge strane',
   expired: 'Ponuda je istekla',
 };
@@ -25,7 +27,14 @@ export function EscrowTimeline({ status, progress }: EscrowTimelineProps) {
       <ol className="flex items-center gap-1" aria-label="Napredak escrow-a">
         {TIMELINE.map((step, i) => {
           const isDone = done || i < progress;
-          const isCurrent = !done && i === progress && status !== 'refunded' && status !== 'declined' && status !== 'expired';
+          const isCurrent =
+            !done &&
+            i === progress &&
+            status !== 'refunded' &&
+            status !== 'declined' &&
+            status !== 'expired' &&
+            status !== 'cancelling' &&
+            status !== 'cancelled';
           return (
             <li key={step.status} className="flex flex-1 flex-col items-center gap-1.5 text-center">
               <div className="flex w-full items-center">
@@ -80,7 +89,8 @@ export function EscrowTimeline({ status, progress }: EscrowTimelineProps) {
               'inline-block rounded-full border px-3 py-1 text-xs font-medium',
               status === 'disputed' && 'border-red-500/40 bg-red-500/15 text-red-300',
               status === 'refunded' && 'border-sky-500/40 bg-sky-500/15 text-sky-300',
-              (status === 'declined' || status === 'expired') && 'border-border bg-muted text-muted-foreground',
+              status === 'cancelling' && 'border-amber-500/40 bg-amber-500/15 text-amber-300',
+              (status === 'cancelled' || status === 'declined' || status === 'expired') && 'border-border bg-muted text-muted-foreground',
             )}
           >
             {OVERRIDES[status]}

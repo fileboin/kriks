@@ -29,9 +29,9 @@ function StatusBadge({ status }: { status: EscrowStatus }) {
         status === 'released' && 'border-emerald-500/40 bg-emerald-500/15 text-emerald-300',
         status === 'refunded' && 'border-sky-500/40 bg-sky-500/15 text-sky-300',
         status === 'disputed' && 'border-red-500/40 bg-red-500/15 text-red-300',
-        (status === 'active' || status === 'funded' || status === 'delivered') &&
+        (status === 'active' || status === 'funded' || status === 'delivered' || status === 'cancelling') &&
           'border-amber-500/40 bg-amber-500/15 text-amber-300',
-        (status === 'proposed' || status === 'declined' || status === 'expired') &&
+        (status === 'proposed' || status === 'cancelled' || status === 'declined' || status === 'expired') &&
           'border-border bg-muted text-muted-foreground',
       )}
     >
