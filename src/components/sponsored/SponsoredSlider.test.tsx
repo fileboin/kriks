@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest';
 import { render } from '@testing-library/react';
 import type { NostrEvent } from '@nostrify/nostrify';
 
-import { SponsoredSlider, shouldAutoRotate } from './SponsoredSlider';
+import { SponsoredSlider, getEffectiveVisibleCount, shouldAutoRotate } from './SponsoredSlider';
 import { parseCampaignEvent, DEFAULT_SLIDER_SETTINGS, type AdCampaign, type SliderSettings } from '@/lib/sponsored/core';
 import { SPONSORED_CAMPAIGN_KIND } from '@/lib/sponsored/kinds';
 
@@ -54,6 +54,26 @@ describe('shouldAutoRotate (pure gate)', () => {
   it('never rotates when autoRotate is off or there is a single snap', () => {
     expect(shouldAutoRotate({ ...settings, autoRotate: false }, false, 3)).toBe(false);
     expect(shouldAutoRotate(settings, false, 1)).toBe(false);
+  });
+});
+
+describe('getEffectiveVisibleCount (row fill rule)', () => {
+  it('a lone campaign fills the row as one big card', () => {
+    expect(getEffectiveVisibleCount(1, 3)).toBe(1);
+  });
+
+  it('two campaigns fill the row with 2 cards (no empty third slot)', () => {
+    expect(getEffectiveVisibleCount(2, 3)).toBe(2);
+  });
+
+  it('3+ campaigns use the configured desktop count', () => {
+    expect(getEffectiveVisibleCount(3, 3)).toBe(3);
+    expect(getEffectiveVisibleCount(7, 3)).toBe(3);
+  });
+
+  it('respects a smaller configured count', () => {
+    expect(getEffectiveVisibleCount(3, 1)).toBe(1);
+    expect(getEffectiveVisibleCount(5, 2)).toBe(2);
   });
 });
 

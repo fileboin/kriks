@@ -70,7 +70,8 @@ export function SponsoredCard({ campaign, listing, className, style }: Sponsored
     <div
       style={style}
       className={cn(
-        'relative flex overflow-hidden rounded-[10px] border border-border border-l-2 bg-card',
+        // Fixed 160px height — premium promo size, zero layout shift.
+        'relative flex h-40 overflow-hidden rounded-[10px] border border-border border-l-2 bg-card',
         ACCENT_CLASSES[campaign.accent],
         className,
       )}
@@ -92,8 +93,8 @@ export function SponsoredCard({ campaign, listing, className, style }: Sponsored
         />
       ) : null}
 
-      {/* Image zone (left, ~96px) */}
-      <div className="relative w-24 shrink-0 overflow-hidden bg-muted">
+      {/* Image zone (left, 96px mobile / 128px desktop) */}
+      <div className="relative h-full w-24 shrink-0 overflow-hidden bg-muted sm:w-32">
         {isSponsoredListing ? (
           listing?.images[0] ? (
             <img
@@ -120,24 +121,24 @@ export function SponsoredCard({ campaign, listing, className, style }: Sponsored
       </div>
 
       {/* Content zone (right) — pointer-events pass through to the link */}
-      <div className="pointer-events-none relative z-10 flex min-w-0 flex-1 flex-col gap-1 p-2">
+      <div className="pointer-events-none relative z-10 flex min-w-0 flex-1 flex-col gap-1.5 p-2.5">
         {/* ① Source row: category (listing) / domain (promo) + badge */}
         <div className="flex items-center justify-between gap-2">
           <p
             className={cn(
-              'min-w-0 truncate text-[10px] font-bold tracking-wide uppercase',
+              'min-w-0 truncate text-[11px] font-bold tracking-wide uppercase',
               isSponsoredListing ? categoryStyle.text : 'text-muted-foreground',
             )}
           >
             {categoryLabel ?? '—'}
           </p>
-          <span className="shrink-0 rounded-full bg-primary px-2 py-0.5 text-[9px] font-bold tracking-wide text-primary-foreground uppercase">
+          <span className="shrink-0 rounded-full bg-primary px-2 py-0.5 text-[10px] font-bold tracking-wide text-primary-foreground uppercase">
             {BADGE_LABELS[campaign.badge]}
           </span>
         </div>
 
         {/* ② Title */}
-        {title && <p className="line-clamp-2 text-xs font-bold leading-tight">{title}</p>}
+        {title && <p className="line-clamp-2 text-sm font-bold leading-snug">{title}</p>}
 
         {/* ③ Bottom: price (listing) / description (promo) + CTA */}
         <div className="mt-auto flex items-center justify-between gap-2">
@@ -145,27 +146,27 @@ export function SponsoredCard({ campaign, listing, className, style }: Sponsored
             <>
               <p
                 className={cn(
-                  'flex min-w-0 items-center gap-0.5 truncate text-xs font-bold',
+                  'flex min-w-0 items-center gap-0.5 truncate text-sm font-bold',
                   listing?.price
                     ? isBtc
                       ? 'text-amber-400'
                       : 'text-green-400'
-                    : 'text-[10px] font-medium text-muted-foreground',
+                    : 'text-[11px] font-medium text-muted-foreground',
                 )}
               >
-                {isBtc && <Zap className="size-3 shrink-0 text-amber-400" aria-hidden />}
+                {isBtc && <Zap className="size-3.5 shrink-0 text-amber-400" aria-hidden />}
                 {formatPrice(listing?.price)}
               </p>
-              <ArrowRight className="size-3.5 shrink-0 text-muted-foreground" aria-hidden />
+              <ArrowRight className="size-4 shrink-0 text-muted-foreground" aria-hidden />
             </>
           ) : promo ? (
             <>
-              <p className="min-w-0 truncate text-[10px] text-muted-foreground">
+              <p className="min-w-0 truncate text-[11px] text-muted-foreground">
                 {promo.description ?? domainOf(promo.url)}
               </p>
-              <span className="inline-flex shrink-0 items-center gap-1 rounded-full border border-primary/40 px-2 py-0.5 text-[9px] font-semibold text-primary">
+              <span className="inline-flex shrink-0 items-center gap-1 rounded-full border border-primary/40 px-2 py-0.5 text-[10px] font-semibold text-primary">
                 {promo.ctaLabel}
-                <ExternalLink className="size-2.5" aria-hidden />
+                <ExternalLink className="size-3" aria-hidden />
               </span>
             </>
           ) : null}
@@ -181,13 +182,13 @@ export function SponsoredCardSkeleton({ style }: { style?: CSSProperties }) {
     <div
       style={style}
       aria-hidden
-      className="flex overflow-hidden rounded-[10px] border border-border border-l-2 border-l-primary/40 bg-card"
+      className="flex h-40 overflow-hidden rounded-[10px] border border-border border-l-2 border-l-primary/40 bg-card"
     >
-      <div className="w-24 shrink-0 animate-pulse bg-muted/60" />
-      <div className="flex flex-1 flex-col gap-2 p-2">
-        <div className="h-2 w-16 animate-pulse rounded bg-muted/60" />
-        <div className="h-3 w-4/5 animate-pulse rounded bg-muted/60" />
-        <div className="mt-auto h-3 w-1/2 animate-pulse rounded bg-muted/60" />
+      <div className="h-full w-24 shrink-0 animate-pulse bg-muted/60 sm:w-32" />
+      <div className="flex flex-1 flex-col gap-2 p-2.5">
+        <div className="h-2.5 w-16 animate-pulse rounded bg-muted/60" />
+        <div className="h-3.5 w-4/5 animate-pulse rounded bg-muted/60" />
+        <div className="mt-auto h-3.5 w-1/2 animate-pulse rounded bg-muted/60" />
       </div>
     </div>
   );

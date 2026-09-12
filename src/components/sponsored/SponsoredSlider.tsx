@@ -9,12 +9,35 @@ import { useListing } from '@/hooks/useListings';
 import type { AdCampaign, SliderSettings } from '@/lib/sponsored/core';
 import { cn } from '@/lib/utils';
 
-/** Desktop slide width per configured visible count (gap 12px). */
-const DESKTOP_WIDTH_CLASSES: Record<number, string> = {
-  1: 'sm:[--sponsor-w:100%]',
-  2: 'sm:[--sponsor-w:calc((100%-12px)/2)]',
-  3: 'sm:[--sponsor-w:calc((100%-24px)/3)]',
+/**
+ * Slide width per effective visible count (gap 12px). Full literal classes
+ * so the Tailwind compiler generates every variant. Applied in steps:
+ * mobile 1 visible (calc(100%−48px) peek), sm ≤2 visible, lg = effective.
+ */
+const WIDTH_CLASSES: Record<number, { sm: string; lg: string }> = {
+  1: {
+    sm: 'sm:[--sponsor-w:100%]',
+    lg: 'lg:[--sponsor-w:100%]',
+  },
+  2: {
+    sm: 'sm:[--sponsor-w:calc((100%-12px)/2)]',
+    lg: 'lg:[--sponsor-w:calc((100%-12px)/2)]',
+  },
+  3: {
+    sm: 'sm:[--sponsor-w:calc((100%-12px)/2)]',
+    lg: 'lg:[--sponsor-w:calc((100%-24px)/3)]',
+  },
 };
+
+/**
+ * Effective visible count (desktop): a lone campaign fills the row as one
+ * big card (never a duplicated or missing second slot); otherwise the
+ * smaller of the campaign count and the configured desktop count.
+ */
+export function getEffectiveVisibleCount(campaignCount: number, desktopAds: number): number {
+  if (campaignCount <= 1) return 1;
+  return Math.min(campaignCount, desktopAds);
+}
 
 /** Dots are only useful for a small number of positions. */
 const MAX_DOTS = 10;
@@ -121,12 +144,17 @@ export function SponsoredSlider({ campaigns, settings }: SponsoredSliderProps) {
 
   if (campaigns.length === 0) return null;
 
-  const desktopWidthClass = DESKTOP_WIDTH_CLASSES[settings.desktopAds] ?? DESKTOP_WIDTH_CLASSES[3];
+  const effectiveN = getEffectiveVisibleCount(campaigns.length, settings.desktopAds);
+  const width = WIDTH_CLASSES[effectiveN] ?? WIDTH_CLASSES[3];
   const showDots = snapCount > 1 && snapCount <= MAX_DOTS;
 
   return (
     <div
-      className={cn('group relative [--sponsor-w:85vw]', desktopWidthClass)}
+      className={cn(
+        'group relative [--sponsor-w:calc(100%-48px)]',
+        width.sm,
+        width.lg,
+      )}
       onPointerEnter={() => setInteractionPaused(true)}
       onPointerLeave={() => setInteractionPaused(false)}
       onFocusCapture={() => setInteractionPaused(true)}
@@ -160,7 +188,7 @@ export function SponsoredSlider({ campaigns, settings }: SponsoredSliderProps) {
         onClick={() => emblaApi?.scrollPrev()}
         disabled={!canPrev}
         className={cn(
-          'absolute top-1/2 left-1 grid size-7 -translate-y-1/2 place-items-center rounded-full bg-black/60 text-white',
+          'absolute top-1/2 left-1 grid size-8 -translate-y-1/2 place-items-center rounded-full bg-black/60 text-white',
           'opacity-0 transition-opacity focus-visible:opacity-100 group-hover:opacity-100 max-md:hidden',
           !canPrev && 'pointer-events-none opacity-0',
         )}
@@ -173,7 +201,7 @@ export function SponsoredSlider({ campaigns, settings }: SponsoredSliderProps) {
         onClick={() => emblaApi?.scrollNext()}
         disabled={!canNext}
         className={cn(
-          'absolute top-1/2 right-1 grid size-7 -translate-y-1/2 place-items-center rounded-full bg-black/60 text-white',
+          'absolute top-1/2 right-1 grid size-8 -translate-y-1/2 place-items-center rounded-full bg-black/60 text-white',
           'opacity-0 transition-opacity focus-visible:opacity-100 group-hover:opacity-100 max-md:hidden',
           !canNext && 'pointer-events-none opacity-0',
         )}
