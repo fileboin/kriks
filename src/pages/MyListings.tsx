@@ -1,3 +1,4 @@
+import { useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { useSeoMeta } from '@unhead/react';
 
@@ -7,8 +8,14 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { useUserListings } from '@/hooks/useListings';
+import { useMyEscrowStates } from '@/hooks/useEscrow';
+import type { EscrowState } from '@/lib/escrow/types';
+import { LISTING_KIND } from '@/lib/listings';
 
 import { Inbox, PackageSearch, Plus } from 'lucide-react';
+
+const GRID_CLASSES =
+  'grid grid-cols-2 gap-1.5 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5';
 
 const MyListings = () => {
   useSeoMeta({
@@ -18,6 +25,18 @@ const MyListings = () => {
 
   const { user } = useCurrentUser();
   const { data: listings, isPending } = useUserListings(user?.pubkey);
+  const { states: myEscrowStates } = useMyEscrowStates();
+
+  /** Latest escrow per listing coordinate — owner sees status chips for buyers' escrows. */
+  const escrowByListing = useMemo(() => {
+    const map = new Map<string, EscrowState>();
+    for (const { state, contract } of myEscrowStates) {
+      if (contract.listingCoordinate && !map.has(contract.listingCoordinate)) {
+        map.set(contract.listingCoordinate, state);
+      }
+    }
+    return map;
+  }, [myEscrowStates]);
 
   if (!user) {
     return (
@@ -55,7 +74,7 @@ const MyListings = () => {
       </div>
 
       {isPending ? (
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+        <div className={GRID_CLASSES}>
           {Array.from({ length: 4 }).map((_, i) => (
             <ListingCardSkeleton key={i} />
           ))}
@@ -83,9 +102,15 @@ const MyListings = () => {
             {listings.length} {listings.length === 1 ? 'oglas' : 'oglasa'} — klikni na oglas da ga
             označiš kao prodat ili obrišeš.
           </p>
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+          <div className={GRID_CLASSES}>
             {listings.map((listing) => (
-              <ListingCard key={listing.event.id} listing={listing} />
+              <ListingCard
+                key={listing.event.id}
+                listing={listing}
+                myEscrowState={escrowByListing.get(
+                  `${LISTING_KIND}:${listing.pubkey}:${listing.d}`,
+                )}
+              />
             ))}
           </div>
         </>

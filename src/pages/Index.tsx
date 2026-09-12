@@ -14,9 +14,14 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { useListings } from '@/hooks/useListings';
-import { CATEGORIES, listingMatchesSearch } from '@/lib/listings';
+import { useMyEscrowStates } from '@/hooks/useEscrow';
+import type { EscrowState } from '@/lib/escrow/types';
+import { CATEGORIES, LISTING_KIND, listingMatchesSearch } from '@/lib/listings';
 
 import { ArrowRight, PackageSearch, Plus, Search } from 'lucide-react';
+
+const GRID_CLASSES =
+  'grid grid-cols-2 gap-1.5 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5';
 
 const Index = () => {
   useSeoMeta({
@@ -31,6 +36,18 @@ const Index = () => {
   const [searchInput, setSearchInput] = useState(query);
 
   const { data: listings, isPending, isError } = useListings(category);
+  const { states: myEscrowStates } = useMyEscrowStates();
+
+  /** Latest escrow per listing coordinate (for the card entry point). */
+  const escrowByListing = useMemo(() => {
+    const map = new Map<string, EscrowState>();
+    for (const { state, contract } of myEscrowStates) {
+      if (contract.listingCoordinate && !map.has(contract.listingCoordinate)) {
+        map.set(contract.listingCoordinate, state);
+      }
+    }
+    return map;
+  }, [myEscrowStates]);
 
   const filtered = useMemo(() => {
     if (!listings) return [];
@@ -161,8 +178,8 @@ const Index = () => {
 
         <div className="mt-4">
           {isPending ? (
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-              {Array.from({ length: 8 }).map((_, i) => (
+            <div className={GRID_CLASSES}>
+              {Array.from({ length: 10 }).map((_, i) => (
                 <ListingCardSkeleton key={i} />
               ))}
             </div>
@@ -193,9 +210,15 @@ const Index = () => {
               </CardContent>
             </Card>
           ) : (
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+            <div className={GRID_CLASSES}>
               {filtered.map((listing) => (
-                <ListingCard key={listing.event.id} listing={listing} />
+                <ListingCard
+                  key={listing.event.id}
+                  listing={listing}
+                  myEscrowState={escrowByListing.get(
+                    `${LISTING_KIND}:${listing.pubkey}:${listing.d}`,
+                  )}
+                />
               ))}
             </div>
           )}
