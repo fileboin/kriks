@@ -53,19 +53,19 @@ const Index = () => {
   return (
     <>
       {/* Hero */}
-      <section className="relative overflow-hidden border-b bg-gradient-to-b from-indigo-50 via-background to-background dark:from-indigo-950/30 dark:via-background dark:to-background">
+      <section className="relative overflow-hidden border-b bg-gradient-to-b from-card via-background to-background">
         <div
           aria-hidden
-          className="pointer-events-none absolute inset-0 bg-[radial-gradient(45rem_20rem_at_75%_-10%,rgba(103,232,249,0.35),transparent)] dark:bg-[radial-gradient(45rem_20rem_at_75%_-10%,rgba(8,145,178,0.18),transparent)]"
+          className="pointer-events-none absolute inset-0 bg-[radial-gradient(45rem_20rem_at_75%_-10%,rgba(247,147,26,0.14),transparent)]"
         />
         <div
           aria-hidden
-          className="pointer-events-none absolute inset-0 bg-[radial-gradient(35rem_20rem_at_10%_0%,rgba(199,210,254,0.5),transparent)] dark:bg-[radial-gradient(35rem_20rem_at_10%_0%,rgba(67,56,202,0.22),transparent)]"
+          className="pointer-events-none absolute inset-0 bg-[radial-gradient(35rem_20rem_at_10%_0%,rgba(37,66,160,0.22),transparent)]"
         />
         <div className="relative container flex flex-col items-center py-16 text-center md:py-24">
           <h1 className="max-w-3xl text-4xl font-bold tracking-tight text-balance sm:text-5xl md:text-6xl">
             Kupuj i prodaj.{' '}
-            <span className="bg-gradient-to-r from-indigo-500 to-cyan-500 bg-clip-text text-transparent">
+            <span className="bg-gradient-to-r from-amber-400 to-orange-500 bg-clip-text text-transparent">
               Bez posrednika.
             </span>
           </h1>

@@ -36,7 +36,7 @@ function MobileNav() {
       <SheetContent side="right" className="w-72">
         <SheetHeader>
           <SheetTitle className="flex items-center gap-2.5">
-            <span className="grid size-8 place-items-center rounded-lg bg-gradient-to-br from-indigo-500 to-cyan-500 text-white">
+            <span className="grid size-8 place-items-center rounded-lg bg-gradient-to-br from-amber-400 to-orange-500 text-primary-foreground">
               <Tag className="size-4" aria-hidden />
             </span>
             Oglasnik
@@ -68,11 +68,11 @@ function Header() {
           className="flex shrink-0 items-center gap-2.5 rounded-lg focus-visible:outline-2 focus-visible:outline-offset-4"
           aria-label="Oglasnik — početna"
         >
-          <span className="grid size-9 place-items-center rounded-xl bg-gradient-to-br from-indigo-500 to-cyan-500 text-white shadow-sm">
+          <span className="grid size-9 place-items-center rounded-xl bg-gradient-to-br from-amber-400 to-orange-500 text-primary-foreground shadow-sm">
             <Tag className="size-5" aria-hidden />
           </span>
           <span className="hidden text-xl font-bold tracking-tight sm:inline">
-            Oglas<span className="bg-gradient-to-r from-indigo-500 to-cyan-500 bg-clip-text text-transparent">nik</span>
+            Oglas<span className="bg-gradient-to-r from-amber-400 to-orange-500 bg-clip-text text-transparent">nik</span>
           </span>
         </Link>
 

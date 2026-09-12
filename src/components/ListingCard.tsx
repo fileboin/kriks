@@ -55,7 +55,7 @@ export function ListingCard({ listing, className }: ListingCardProps) {
         </div>
 
         <CardContent className="flex flex-1 flex-col gap-1.5 p-4">
-          <p className="line-clamp-2 font-semibold leading-snug transition-colors group-hover:text-indigo-600 dark:group-hover:text-indigo-400">
+          <p className="line-clamp-2 font-semibold leading-snug transition-colors group-hover:text-primary">
             {listing.title}
           </p>
 

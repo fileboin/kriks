@@ -4,8 +4,8 @@
   "description": "Decentralizovana oglasna tabla na Nostr protokolu. Bez servera, bez provizija, bez registracije.",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#ffffff",
-  "theme_color": "#6366f1",
+  "background_color": "#040711",
+  "theme_color": "#040711",
   "icons": [
     {
       "src": "/favicon.svg",
