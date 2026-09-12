@@ -144,9 +144,9 @@ Follows NIP-99 with these tags:
 - `summary` — optional short description
 - `published_at` — unix seconds of first publication
 - `t` — category (relay-indexable). Values used by this app:
-  `telefoni`, `sim-esim`, `racunari`, `elektronika`, `kripto`, `vozila`,
-  `nekretnine`, `namestaj`, `odeca`, `sport`, `ljubimci`, `usluge`, `posao`,
-  `besplatno`, `ostalo`
+  `telefoni`, `sim-esim`, `sms-otp`, `racunari`, `elektronika`, `kripto`, `vozila`,
+  `nekretnine`, `namestaj`, `odeca`, `sport`, `ljubimci`, `usluge`,
+  `saas-projekti`, `posao`, `besplatno`, `ostalo`
 - `price` — `[price, <number>, <currency>, <frequency?>]`, currency in ISO 4217
   or ISO-like code (`RSD`, `EUR`, `USD`, `BTC`), frequency optional
   (`hour`, `day`, `week`, `month`, `year`)

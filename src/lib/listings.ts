@@ -39,6 +39,7 @@ export interface Category {
 export const CATEGORIES: Category[] = [
   { value: 'telefoni', label: 'Telefoni' },
   { value: 'sim-esim', label: 'SIM i eSIM' },
+  { value: 'sms-otp', label: 'SMS OTP kodovi' },
   { value: 'racunari', label: 'Računari' },
   { value: 'elektronika', label: 'Elektronika' },
   { value: 'kripto', label: 'Kripto' },
@@ -49,6 +50,7 @@ export const CATEGORIES: Category[] = [
   { value: 'sport', label: 'Sport i hobiji' },
   { value: 'ljubimci', label: 'Kućni ljubimci' },
   { value: 'usluge', label: 'Usluge' },
+  { value: 'saas-projekti', label: 'SaaS projekti' },
   { value: 'posao', label: 'Posao' },
   { value: 'besplatno', label: 'Besplatno' },
   { value: 'ostalo', label: 'Ostalo' },
