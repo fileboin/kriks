@@ -20,6 +20,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
+import { MessageSellerDialog } from '@/components/MessageSellerDialog';
 import { useAuthor } from '@/hooks/useAuthor';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { useListing } from '@/hooks/useListings';
@@ -45,6 +46,7 @@ import {
   ImageIcon,
   Loader2,
   MapPin,
+  MessageCircle,
   PackageX,
   Tag,
   UserRound,
@@ -72,9 +74,18 @@ function Paragraphs({ content }: { content: string }) {
   );
 }
 
-function SellerCard({ pubkey }: { pubkey: string }) {
+function SellerCard({
+  pubkey,
+  listingTitle,
+  listingCoordinate,
+}: {
+  pubkey: string;
+  listingTitle: string;
+  listingCoordinate: string;
+}) {
   const author = useAuthor(pubkey);
   const { toast } = useToast();
+  const [messageOpen, setMessageOpen] = useState(false);
 
   const metadata = author.data?.metadata;
   const displayName = metadata?.display_name ?? metadata?.name ?? 'Anonimni prodavac';
@@ -119,21 +130,39 @@ function SellerCard({ pubkey }: { pubkey: string }) {
           )}
         </div>
 
-        <div className="grid grid-cols-2 gap-2">
-          <Button variant="outline" className="gap-1.5" onClick={() => void copyPubkey()}>
-            <Copy className="size-4" aria-hidden />
-            Kontaktiraj
+        <div className="grid grid-cols-[1fr_auto_auto] gap-2">
+          <Button className="gap-1.5" onClick={() => setMessageOpen(true)}>
+            <MessageCircle className="size-4" aria-hidden />
+            Pošalji poruku
           </Button>
-          <Button variant="outline" asChild>
-            <Link to={`/${npub}`}>Profil</Link>
+          <Button variant="outline" size="icon" asChild>
+            <Link to={`/${npub}`} aria-label="Profil prodavca">
+              <UserRound className="size-4" aria-hidden />
+            </Link>
+          </Button>
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={() => void copyPubkey()}
+            aria-label="Kopiraj Nostr adresu"
+          >
+            <Copy className="size-4" aria-hidden />
           </Button>
         </div>
 
         <p className="text-xs text-muted-foreground">
-          Poruke se razmenjuju direktno preko Nostr-a — tvoja adresa ostaje privatna,
-          a razgovor vodiš iz svog klijenta.
+          Poruka je end-to-end šifrovana — direktno preko Nostr-a, bez posrednika.
+          Odgovor će ti stići u chat tvog Nostr klijenta.
         </p>
       </CardContent>
+
+      <MessageSellerDialog
+        open={messageOpen}
+        onOpenChange={setMessageOpen}
+        sellerPubkey={pubkey}
+        listingTitle={listingTitle}
+        listingCoordinate={listingCoordinate}
+      />
     </Card>
   );
 }
@@ -391,7 +420,15 @@ export function ListingDetail({ pubkey, identifier }: ListingDetailProps) {
             </CardContent>
           </Card>
 
-          {isOwner ? <OwnerActions listing={listing} /> : <SellerCard pubkey={listing.pubkey} />}
+          {isOwner ? (
+            <OwnerActions listing={listing} />
+          ) : (
+            <SellerCard
+              pubkey={listing.pubkey}
+              listingTitle={listing.title}
+              listingCoordinate={`${LISTING_KIND}:${listing.pubkey}:${listing.d}`}
+            />
+          )}
         </div>
       </div>
     </div>
