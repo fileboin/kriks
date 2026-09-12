@@ -90,7 +90,12 @@ const NostrProvider: React.FC<NostrProviderProps> = (props) => {
 
       return [...allRelays];
     },
-    eoseTimeout: 200,
+    // Wait up to 2s for straggler relays (cold WebSocket handshakes) to
+    // contribute to query results. The previous 200ms cutoff silently
+    // produced "successful" empty results whenever a read relay was slow
+    // to connect — e.g. sponsored campaigns appearing once, then never
+    // again on fresh sessions.
+    eoseTimeout: 2000,
   }));
 
   // Derive the current signer from the active login. This mirrors the
