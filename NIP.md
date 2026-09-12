@@ -20,6 +20,68 @@ Custom kinds (generated, unused numbers verified):
 |------|-------|---------|
 | 36797 | addressable | Escrow contract (terms + participants) |
 | 1951 | regular | Escrow action (signed state transition) |
+| 35239 | addressable | Sponsored/featured ad campaign (admin-signed) |
+| 37197 | addressable | Sponsored slider settings singleton (admin-signed) |
+
+## Sponsored / featured campaigns
+
+A paid promotional area on the marketplace feed (slider UI arrives in a
+later phase; SP1 defines the protocol). Paid placement is
+operator-controlled while reading stays open: **campaign and settings
+events are only valid when signed by an admin pubkey**
+(`src/lib/admin.ts`, `ADMIN_PUBKEYS`) — clients MUST filter by `authors`
+at the relay and re-check the author when parsing (defense in depth, the
+same rule this document mandates for addressable events).
+
+### Kind 35239 — ad campaign (addressable)
+
+Author = admin. Replaceable per `d` (enable/disable/priority updates
+re-publish the same `d`, like listing `status: sold`).
+
+Tags:
+
+- `d` — campaign id
+- `type` — `sponsored-listing` | `promo` (referral/promotional content uses
+  the same model with this discriminator)
+- `a` — **required for `sponsored-listing`**: coordinate of the promoted
+  NIP-99 listing (`30402:<pubkey>:<d>`)
+- `title` (1–80), `image` (https), `url` (https), `cta` (1–24),
+  `description` (≤200, plain text) — **required/optional for `promo`**
+- `price` — `[price, <amount>, <currency>]`, currency ∈ `sats` | `BTC` |
+  `USDT` (locked decision: USDT is the MVP stablecoin, no USDC)
+- `duration` — campaign length in days (1–365)
+- `start` / `end` — unix seconds schedule window (`end > start`)
+- `status` — `active` | `disabled`; **unknown/missing fails safe to
+  `disabled`**
+- `priority` — integer, higher renders first (clamped to ±1000, default 0)
+- `accent` — `primary` | `amber` | `green` (enum-only appearance)
+- `badge` — `featured` | `promo` | `new` (enum-only appearance)
+- `alt` — NIP-31 human-readable description
+
+`content` = optional promo description (≤200 chars, rendered as plain
+text — never HTML).
+
+Validation lives in `src/lib/sponsored/core.ts`:
+schema-strict on required fields and bounds; **enum-only appearance** (no
+HTML/CSS ever, no free-form admin config); all URLs https-only via
+`sanitizeUrl`; visibility = `status === 'active' && start ≤ now < end`.
+
+### Kind 37197 — slider settings (addressable)
+
+Author = admin, `d` = `slider` (singleton). Tags (all optional, clamped
+to safe bounds, defaults in parentheses):
+
+- `desktopAds` (3, clamp 1–3) · `mobileAds` (fixed 1 — locked decision)
+- `secondsPerSlide` (6, clamp 3–30 — minimum 3 s anti-flicker)
+- `autoRotate` (true) · `pauseOnInteraction` (true)
+
+### Queries
+
+- Campaigns: `{ kinds: [35239], authors: ADMIN_PUBKEYS, limit: 100 }`
+- Settings: `{ kinds: [37197], authors: ADMIN_PUBKEYS, '#d': ['slider'], limit: 1 }`
+
+Payment verification (admin-verified zap receipts / on-chain evidence)
+and the admin/advertiser UI are deliberately **out of scope for SP1**.
 
 ## Escrow protocol
 
