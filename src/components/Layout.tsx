@@ -16,6 +16,7 @@ import { Menu, Plus, Tag } from 'lucide-react';
 
 const NAV_LINKS = [
   { to: '/', label: 'Svi oglasi' },
+  { to: '/escrow', label: 'Escrow' },
   { to: '/moji-oglas', label: 'Moj oglas' },
   { to: '/novi-oglas', label: 'Novi oglas' },
 ];
@@ -79,6 +80,9 @@ function Header() {
         <nav className="ml-1 hidden items-center gap-1 md:flex" aria-label="Glavna navigacija">
           <Button variant="ghost" className="rounded-full" asChild>
             <Link to="/">Oglasi</Link>
+          </Button>
+          <Button variant="ghost" className="rounded-full" asChild>
+            <Link to="/escrow">Escrow</Link>
           </Button>
           <Button variant="ghost" className="rounded-full" asChild>
             <Link to="/moji-oglas">Moj oglas</Link>

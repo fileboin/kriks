@@ -21,6 +21,7 @@ import {
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
 import { MessageSellerDialog } from '@/components/MessageSellerDialog';
+import { EscrowCreateDialog, type EscrowPreset } from '@/components/escrow/EscrowCreateDialog';
 import { useAuthor } from '@/hooks/useAuthor';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { useListing } from '@/hooks/useListings';
@@ -48,6 +49,7 @@ import {
   MapPin,
   MessageCircle,
   PackageX,
+  ShieldCheck,
   Tag,
   UserRound,
 } from 'lucide-react';
@@ -74,24 +76,18 @@ function Paragraphs({ content }: { content: string }) {
   );
 }
 
-function SellerCard({
-  pubkey,
-  listingTitle,
-  listingCoordinate,
-}: {
-  pubkey: string;
-  listingTitle: string;
-  listingCoordinate: string;
-}) {
+function SellerCard({ listing }: { listing: Listing }) {
+  const pubkey = listing.pubkey;
   const author = useAuthor(pubkey);
   const { toast } = useToast();
   const [messageOpen, setMessageOpen] = useState(false);
+  const [escrowOpen, setEscrowOpen] = useState(false);
 
   const metadata = author.data?.metadata;
   const displayName = metadata?.display_name ?? metadata?.name ?? 'Anonimni prodavac';
   const picture = metadata?.picture ? sanitizeUrl(metadata.picture) : undefined;
   const npub = nip19.npubEncode(pubkey);
-  const shortNpub = `${npub.slice(0, 10)}…${npub.slice(-4)}`;
+  const shortNpubPubkey = `${npub.slice(0, 10)}…${npub.slice(-4)}`;
 
   const copyPubkey = async () => {
     try {
@@ -109,6 +105,19 @@ function SellerCard({
     }
   };
 
+  const escrowPreset: EscrowPreset = {
+    adapterId: 'goods',
+    terms: {
+      title: listing.title,
+      price: listing.price ? String(listing.price.amount) : '',
+      currency: listing.price?.currency ?? 'RSD',
+    },
+    counterpartyPubkey: pubkey,
+    counterpartyLabel: 'Prodavac iz ovog oglasa',
+    myRole: 'buyer',
+    listingCoordinate: `${LISTING_KIND}:${listing.pubkey}:${listing.d}`,
+  };
+
   return (
     <Card>
       <CardContent className="space-y-4 p-5">
@@ -122,7 +131,7 @@ function SellerCard({
           <div className="min-w-0 flex-1">
             <p className="truncate font-semibold">{displayName}</p>
             <p className="truncate text-xs text-muted-foreground" title={npub}>
-              {shortNpub}
+              {shortNpubPubkey}
             </p>
           </div>
           {metadata?.nip05 && (
@@ -150,6 +159,15 @@ function SellerCard({
           </Button>
         </div>
 
+        <Button
+          variant="outline"
+          className="w-full gap-1.5"
+          onClick={() => setEscrowOpen(true)}
+        >
+          <ShieldCheck className="size-4 text-primary" aria-hidden />
+          Kupi uz escrow
+        </Button>
+
         <p className="text-xs text-muted-foreground">
           Poruka je end-to-end šifrovana — direktno preko Nostr-a, bez posrednika.
           Odgovor će ti stići u chat tvog Nostr klijenta.
@@ -160,9 +178,11 @@ function SellerCard({
         open={messageOpen}
         onOpenChange={setMessageOpen}
         sellerPubkey={pubkey}
-        listingTitle={listingTitle}
-        listingCoordinate={listingCoordinate}
+        listingTitle={listing.title}
+        listingCoordinate={`${LISTING_KIND}:${listing.pubkey}:${listing.d}`}
       />
+
+      <EscrowCreateDialog open={escrowOpen} onOpenChange={setEscrowOpen} preset={escrowPreset} />
     </Card>
   );
 }
@@ -423,11 +443,7 @@ export function ListingDetail({ pubkey, identifier }: ListingDetailProps) {
           {isOwner ? (
             <OwnerActions listing={listing} />
           ) : (
-            <SellerCard
-              pubkey={listing.pubkey}
-              listingTitle={listing.title}
-              listingCoordinate={`${LISTING_KIND}:${listing.pubkey}:${listing.d}`}
-            />
+            <SellerCard listing={listing} />
           )}
         </div>
       </div>

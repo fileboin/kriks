@@ -1,10 +1,10 @@
 # NIP.md
 
-This project implements **Oglasnik** — a Serbian-language classifieds board (oglasna tabla) on Nostr.
+This project implements **Oglasnik** — a Serbian-language classifieds board (oglasna tabla) on Nostr, plus a composable **escrow (jemstvo) system**.
 
 ## Kinds used
 
-All kinds are standard. No custom kinds are defined.
+Standard kinds:
 
 | Kind | NIP | Purpose |
 |------|-----|---------|
@@ -13,6 +13,95 @@ All kinds are standard. No custom kinds are defined.
 | 14 | [NIP-17](https://github.com/nostr-protocol/nips/blob/master/17.md) | Private chat message (rumor, inside gift wrap) |
 | 13 | [NIP-59](https://github.com/nostr-protocol/nips/blob/master/59.md) | Seal wrapping the chat message rumor |
 | 1059 | [NIP-59](https://github.com/nostr-protocol/nips/blob/master/59.md) | Gift wrap (ephemeral key) delivering the sealed message |
+
+Custom kinds (generated, unused numbers verified):
+
+| Kind | Range | Purpose |
+|------|-------|---------|
+| 36797 | addressable | Escrow contract (terms + participants) |
+| 1951 | regular | Escrow action (signed state transition) |
+
+## Escrow protocol
+
+A three-party escrow between **buyer**, **seller** and **arbiter**. All state is
+public, signed, append-only Nostr events — the "smart contract" is the
+combination of a contract event and its action events.
+
+### Kind 36797 — escrow contract (addressable)
+
+Author = **initiator** (buyer or seller who proposed the trade).
+
+Tags:
+
+- `d` — unique escrow id (random)
+- `p` × 3 — **ordered** participants: `[buyer, seller, arbiter]` (order defines roles)
+- `t` — adapter id: `crypto-swap`, `goods` or `lightning-btc` (relay-indexable)
+- `a` — optional listing coordinate (`30402:<pubkey>:<d>`) when spawned from a listing
+- `expiration` — unix seconds; an unaccepted proposal expires after it
+- `alt` — NIP-31 human-readable description
+
+`content` = JSON object of adapter-specific terms (e.g.
+`{"give_asset":"USDC","give_amount":"100","want_asset":"XMR","want_amount":"0.42"}`).
+Terms are immutable **by convention**; re-publishing the coordinate resets
+consent because actions older than the current contract version are ignored
+(see `deriveEscrowState`).
+
+### Kind 1951 — escrow action (regular)
+
+Author = the acting party. One action = one state transition.
+
+Tags:
+
+- `a` — the escrow coordinate (`36797:<initiator>:<d>`)
+- `e` — the contract event id
+- `p` × 3 — participants copied from the contract (for `#p` filtering)
+- `verb` — `accept` | `decline` | `fund` | `deliver` | `release` | `dispute` | `resolve`
+- `outcome` — for `resolve` only: `release` (pay seller) or `refund` (pay buyer)
+- `alt` — NIP-31 description
+
+`content` = optional note/proof (txid, invoice, message) — public.
+
+### State machine
+
+```
+proposed ──accept(counterparty)──▶ active ──fund(buyer)──▶ funded ──deliver(seller)──▶ delivered ──release(buyer)──▶ released
+    │                                │                       │                          │
+    ├──decline(counterparty)──▶ declined │                       │                          │
+    └──(expires)──▶ expired           └──────────── dispute(buyer|seller) ────────────────┘
+                                              │
+                                              ▼
+                                     resolve(arbiter) ──▶ released | refunded
+```
+
+Valid transitions are enforced by `deriveEscrowState` (`src/lib/escrow/core.ts`):
+- only the counterparty (not the initiator) may `accept`/`decline` a proposal
+- verb ↔ role mapping: `fund`→buyer, `deliver`→seller, `release`→buyer, `resolve`→arbiter
+- invalid actions are ignored; terminal statuses accept no transitions
+- actions signed before the current contract version are ignored
+
+### Adapters (core + adapter architecture)
+
+The protocol is asset-agnostic. An adapter (`src/lib/escrow/adapters.ts`)
+defines: the terms form fields, a trade summary, and buyer/seller step
+guides. Adding a trade type (e.g. "prodajem USDC za XMR") = registering a
+new adapter; the UI, state machine and queries are shared.
+
+| Adapter | Use |
+|---------|-----|
+| `crypto-swap` | Any asset-to-asset swap (USDC↔XMR, …) |
+| `goods` | Purchase of a NIP-99 listing (spawned from listing detail) |
+| `lightning-btc` | BTC over Lightning |
+
+Funds themselves are moved off-protocol per the adapter's steps (the arbiter
+is the trust anchor for custody/disputes); the Nostr layer provides the
+signed, tamper-evident coordination and audit trail.
+
+### Queries
+
+- My escrows: `{ kinds: [36797], '#p': [<my-pubkey>] }`
+- Contract: `{ kinds: [36797], authors: [<initiator>], '#d': [<d>] }` (author
+  filter required — addressable trust boundary)
+- Actions: `{ kinds: [1951], '#a': [<coordinates…>] }`
 
 ## Direct messages to sellers
 
@@ -62,7 +151,7 @@ Follows NIP-99 with these tags:
   This is a domain-specific addition on top of NIP-99 ("other tags may be
   added as necessary"). Unknown to other clients, safely ignored.
 
-## Queries
+## Queries (listings)
 
 - Feed: `{ kinds: [30402], limit: 200 }` with optional `#t` category filter at the relay level.
 - User listings: `{ kinds: [30402], authors: [<pubkey>] }`.

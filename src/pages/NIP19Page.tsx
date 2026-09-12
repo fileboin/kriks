@@ -2,7 +2,9 @@ import { nip19 } from 'nostr-tools';
 import { useParams } from 'react-router-dom';
 
 import { ListingDetail } from '@/components/ListingDetail';
+import { EscrowDetail } from '@/components/escrow/EscrowDetail';
 import { LISTING_KIND } from '@/lib/listings';
+import { ESCROW_KIND } from '@/lib/escrow/types';
 
 import NotFound from './NotFound';
 
@@ -42,6 +44,11 @@ export function NIP19Page() {
       // NIP-99 classified listing detail
       if (kind === LISTING_KIND) {
         return <ListingDetail pubkey={pubkey} identifier={d} />;
+      }
+
+      // Escrow contract detail (custom kind, see NIP.md)
+      if (kind === ESCROW_KIND) {
+        return <EscrowDetail initiator={pubkey} identifier={d} />;
       }
 
       // AI agent should implement other addressable event views here
