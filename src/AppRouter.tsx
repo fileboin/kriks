@@ -7,6 +7,7 @@ import CreateListing from "./pages/CreateListing";
 import MyListings from "./pages/MyListings";
 import EscrowPage from "./pages/Escrow";
 import WalletPage from "./pages/Wallet";
+import AdminAds from "./pages/AdminAds";
 import { NIP19Page } from "./pages/NIP19Page";
 import NotFound from "./pages/NotFound";
 
@@ -21,6 +22,7 @@ export function AppRouter() {
           <Route path="/moji-oglas" element={<MyListings />} />
           <Route path="/escrow" element={<EscrowPage />} />
           <Route path="/wallet" element={<WalletPage />} />
+          <Route path="/admin/reklame" element={<AdminAds />} />
           {/* NIP-19 route for npub1, note1, naddr1, nevent1, nprofile1 */}
           <Route path="/:nip19" element={<NIP19Page />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}

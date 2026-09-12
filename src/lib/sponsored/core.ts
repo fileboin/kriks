@@ -219,13 +219,61 @@ export function parseCampaignEvent(
 /* ── Visibility & ordering ────────────────────────────────────────────── */
 
 /** Is the campaign active and inside its schedule window? */
-export function isCampaignVisible(campaign: AdCampaign, nowSec: number = Math.floor(Date.now() / 1000)): boolean {
-  return (
-    campaign.status === 'active' &&
-    campaign.startAt <= nowSec &&
-    nowSec < campaign.endAt
-  );
+export type CampaignLifecycleStatus = 'draft' | 'scheduled' | 'active' | 'expired' | 'disabled';
+
+/** Deterministic UI lifecycle status derived from campaign data. */
+export function getCampaignLifecycleStatus(
+  campaign: AdCampaign,
+  nowSec: number = Math.floor(Date.now() / 1000),
+): CampaignLifecycleStatus {
+  if (campaign.status === 'disabled') return 'disabled';
+  if (nowSec >= campaign.endAt) return 'expired';
+  if (nowSec < campaign.startAt) return 'scheduled';
+  return 'active';
 }
+
+export function isCampaignVisible(campaign: AdCampaign, nowSec: number = Math.floor(Date.now() / 1000)): boolean {
+  return getCampaignLifecycleStatus(campaign, nowSec) === 'active';
+} 
+
+/** Build the safe Nostr tags for an admin campaign form before signing. */
+export function campaignTags(input: {
+  d: string;
+  type: CampaignType;
+  priceAmount: number;
+  currency: CampaignCurrency;
+  durationDays: number;
+  startAt: number;
+  endAt: number;
+  enabled: boolean;
+  priority: number;
+  accent: CampaignAccent;
+  badge: CampaignBadge;
+  listingCoordinate?: string;
+  promo?: PromoContent;
+}): string[][] {
+  const tags: string[][] = [
+    ['d', input.d],
+    ['type', input.type],
+    ['price', String(input.priceAmount), input.currency],
+    ['duration', String(input.durationDays)],
+    ['start', String(input.startAt)],
+    ['end', String(input.endAt)],
+    ['status', input.enabled ? 'active' : 'disabled'],
+    ['priority', String(input.priority)],
+    ['accent', input.accent],
+    ['badge', input.badge],
+    ['alt', `Sponzorisana kampanja: ${input.type}`],
+  ];
+  if (input.type === 'sponsored-listing' && input.listingCoordinate) {
+    tags.push(['a', input.listingCoordinate]);
+  }
+  if (input.type === 'promo' && input.promo) {
+    tags.push(['title', input.promo.title], ['image', input.promo.image], ['url', input.promo.url], ['cta', input.promo.ctaLabel]);
+    if (input.promo.description) tags.push(['description', input.promo.description]);
+  }
+  return tags;
+} 
 
 /** Priority DESC → start ASC → d (stable tiebreak). */
 export function sortCampaigns(a: AdCampaign, b: AdCampaign): number {

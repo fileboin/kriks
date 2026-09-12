@@ -1,6 +1,8 @@
 import { Link, NavLink, Outlet } from 'react-router-dom';
 
 import { LoginArea } from '@/components/auth/LoginArea';
+import { useCurrentUser } from '@/hooks/useCurrentUser';
+import { isAdminPubkey } from '@/lib/admin';
 import { Button } from '@/components/ui/button';
 import {
   Sheet,
@@ -22,7 +24,7 @@ const NAV_LINKS = [
   { to: '/novi-oglas', label: 'Novi oglas' },
 ];
 
-function MobileNav() {
+function MobileNav({ showAdmin }: { showAdmin: boolean }) {
   return (
     <Sheet>
       <SheetTrigger asChild>
@@ -55,6 +57,14 @@ function MobileNav() {
               {link.label}
             </NavLink>
           ))}
+          {showAdmin && (
+            <NavLink
+              to="/admin/reklame"
+              className="rounded-lg px-3 py-2.5 text-base font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+            >
+              Admin reklame
+            </NavLink>
+          )}
         </nav>
       </SheetContent>
     </Sheet>
@@ -62,6 +72,9 @@ function MobileNav() {
 }
 
 function Header() {
+  const { user } = useCurrentUser();
+  const showAdmin = Boolean(user && isAdminPubkey(user.pubkey));
+
   return (
     <header className="sticky top-0 z-40 border-b bg-background/80 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container flex h-16 items-center gap-2 sm:gap-3">
@@ -88,6 +101,11 @@ function Header() {
           <Button variant="ghost" className="rounded-full" asChild>
             <Link to="/moji-oglas">Moj oglas</Link>
           </Button>
+          {showAdmin && (
+            <Button variant="ghost" className="rounded-full" asChild>
+              <Link to="/admin/reklame">Admin</Link>
+            </Button>
+          )}
         </nav>
 
         <div className={cn('ml-auto flex items-center gap-2 sm:gap-3')}>
@@ -104,7 +122,7 @@ function Header() {
             </Link>
           </Button>
           <LoginArea className="max-w-44 sm:max-w-52" />
-          <MobileNav />
+          <MobileNav showAdmin={showAdmin} />
         </div>
       </div>
     </header>
