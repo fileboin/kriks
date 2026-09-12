@@ -2,6 +2,7 @@ import { ReactNode, useEffect } from 'react';
 import { z } from 'zod';
 import { useLocalStorage } from '@/hooks/useLocalStorage';
 import { AppContext, type AppConfig, type AppContextType, type Theme, type RelayMetadata, type BlossomServerMetadata } from '@/contexts/AppContext';
+import { migrateRelayMetadata } from '@/lib/appRelays';
 
 interface AppProviderProps {
   children: ReactNode;
@@ -60,7 +61,14 @@ export function AppProvider(props: AppProviderProps) {
     setConfig(updater);
   };
 
-  const config = { ...defaultConfig, ...rawConfig };
+  // Defaults merged with persisted state; the relay list is migrated so a
+  // dead relay (relay.dreamith.to) never survives into the live pool config,
+  // even in stale localStorage or NIP-65 lists.
+  const merged = { ...defaultConfig, ...rawConfig };
+  const config: AppConfig = {
+    ...merged,
+    relayMetadata: migrateRelayMetadata(merged.relayMetadata),
+  };
 
   const appContextValue: AppContextType = {
     config,
