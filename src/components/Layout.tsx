@@ -12,11 +12,12 @@ import {
 } from '@/components/ui/sheet';
 import { cn } from '@/lib/utils';
 
-import { Menu, Plus, Tag } from 'lucide-react';
+import { Menu, Plus, Tag, Wallet } from 'lucide-react';
 
 const NAV_LINKS = [
   { to: '/', label: 'Svi oglasi' },
   { to: '/escrow', label: 'Escrow' },
+  { to: '/wallet', label: 'Wallet' },
   { to: '/moji-oglas', label: 'Moj oglas' },
   { to: '/novi-oglas', label: 'Novi oglas' },
 ];
@@ -90,6 +91,12 @@ function Header() {
         </nav>
 
         <div className={cn('ml-auto flex items-center gap-2 sm:gap-3')}>
+          {/* Wallet entry (Bro: AppBar actions, top-right, orange) */}
+          <Button variant="outline" size="icon" className="rounded-full" asChild>
+            <Link to="/wallet" aria-label="Wallet">
+              <Wallet className="size-5 text-primary" aria-hidden />
+            </Link>
+          </Button>
           <Button className="rounded-full" asChild>
             <Link to="/novi-oglas" className="gap-1.5" aria-label="Novi oglas">
               <Plus className="size-4" aria-hidden />
